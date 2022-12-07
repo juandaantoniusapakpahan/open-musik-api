@@ -7,8 +7,8 @@ I used Node v15.14.0 in my project.
 HOST=localhost
 PORT=4000
 
-PGUSER= // database user
-PGHOST= // database host
-PGPASSWORD= // password user
-PGDATABASE= // database name
-PGPORT= // database port
+PGUSER= // database user <br />
+PGHOST= // database host <br />
+PGPASSWORD= // password user <br />
+PGDATABASE= // database name <br />
+PGPORT= // database port <br />
