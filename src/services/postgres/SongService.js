@@ -20,30 +20,22 @@ class SongService {
       values: [id, title, year, genre, performer, duration, albumId],
     };
     // eslint-disable-next-line no-underscore-dangle
-    const songId = await this._pool.query(query);
+    const result = await this._pool.query(query);
 
-    if (!songId.rows[0].id) {
+    if (!result.rows[0].id) {
       throw new InvariantError('Song gagal ditambahkan');
     }
-    return songId.rows[0].id;
+    return result.rows[0].id;
   }
 
   async getSongs(title, performer) {
     if (title !== undefined && performer !== undefined) {
+      const query = {
+        text: 'SELECT id, title, performer FROM songs WHERE LOWER(title) LIKE LOWER($1) AND LOWER(performer) LIKE LOWER($2)',
+        values: [`%${title}%`, `%${performer}%`],
+      };
       // eslint-disable-next-line no-underscore-dangle
-      const songs = await this._pool.query('SELECT id, title, performer FROM songs WHERE title ILIKE $1 AND performer ILIKE $2', [`%${title}%`, `%${performer}%`]);
-      return songs.rows;
-    }
-
-    if (performer !== undefined && title === undefined) {
-      // eslint-disable-next-line no-underscore-dangle
-      const songs = await this._pool.query('SELECT id, title, performer FROM songs WHERE performer ILIKE $1', [`%${performer}%`]);
-      return songs.rows;
-    }
-    // eslint-disable-next-line no-underscore-dangle
-    if (title !== undefined) {
-      // eslint-disable-next-line no-underscore-dangle
-      const songs = await this._pool.query('SELECT id, title, performer FROM songs WHERE title ILIKE $1', [`%${title}%`]);
+      const songs = await this._pool.query(query);
       return songs.rows;
     }
     // eslint-disable-next-line no-underscore-dangle
@@ -53,18 +45,18 @@ class SongService {
 
   async getSongById(id) {
     const query = {
-      text: 'SELECT * FROM songs where songs.id=$1',
+      text: 'SELECT id, title, year, performer, genre, duration, album_id FROM songs where id=$1',
       values: [id],
     };
 
     // eslint-disable-next-line no-underscore-dangle
-    const song = await this._pool.query(query);
+    const result = await this._pool.query(query);
 
-    if (!song.rows.length) {
+    if (!result.rows.length) {
       throw new NotFoundError('Song tidak ditemukan');
     }
 
-    return song.rows.map(mapDBSongModel)[0];
+    return result.rows.map(mapDBSongModel)[0];
   }
 
   async putSongById(id, {

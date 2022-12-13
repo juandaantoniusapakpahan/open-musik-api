@@ -36,37 +36,22 @@ class SongsHandler {
         message: 'Maaf, terjadi kegagalan pada server kami',
       });
       response.code(500);
+      console.error(error);
       return response;
     }
   }
 
   async getSongsHandler(request, h) {
-    const { title, performer } = request.query;
-    // eslint-disable-next-line no-underscore-dangle
-    const songs = await this._service.getSongs(title, performer);
-    const response = h.response({
-      status: 'success',
-      data: {
-        songs,
-      },
-    });
-    response.code(200);
-    return response;
-  }
-
-  async getSongByIdHandler(request, h) {
     try {
-      const { id } = request.params;
+      const { title = '', performer = '' } = request.query;
       // eslint-disable-next-line no-underscore-dangle
-      const song = await this._service.getSongById(id);
-      const response = h.response({
+      const songs = await this._service.getSongs(title, performer);
+      return {
         status: 'success',
         data: {
-          song,
+          songs,
         },
-      });
-      response.code(200);
-      return response;
+      };
     } catch (error) {
       if (error instanceof ClientError) {
         const response = h.response({
@@ -81,11 +66,42 @@ class SongsHandler {
         message: 'Maaf, terjadi kegagalan pada server kami',
       });
       response.code(500);
+      console.error(error);
       return response;
     }
   }
 
-  async editSongByIdHandler(request, h) {
+  async getSongByIdHandler(request, h) {
+    try {
+      const { id } = request.params;
+      // eslint-disable-next-line no-underscore-dangle
+      const song = await this._service.getSongById(id);
+      return {
+        status: 'success',
+        data: {
+          song,
+        },
+      };
+    } catch (error) {
+      if (error instanceof ClientError) {
+        const response = h.response({
+          status: 'fail',
+          message: error.message,
+        });
+        response.code(error.statusCode);
+        return response;
+      }
+      const response = h.response({
+        status: 'error',
+        message: 'Maaf, terjadi kegagalan pada server kami',
+      });
+      response.code(500);
+      console.error(error);
+      return response;
+    }
+  }
+
+  async putSongByIdHandler(request, h) {
     try {
       // eslint-disable-next-line no-underscore-dangle
       this._validator.validateSongPayload(request.payload);
@@ -112,6 +128,7 @@ class SongsHandler {
         message: 'Maaf, terjadi kegagalan pada server kami',
       });
       response.code(500);
+      console.error(error);
       return response;
     }
   }
@@ -141,6 +158,7 @@ class SongsHandler {
         message: 'Maaf, terjadi kegagalan pada server kami',
       });
       response.code(500);
+      console.error(error);
       return response;
     }
   }

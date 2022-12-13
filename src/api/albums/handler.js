@@ -70,6 +70,7 @@ class AlbumsHandler {
         message: 'Maaf, terjadi kegagalan pada server kami',
       });
       response.code(500);
+      console.error(error);
       return response;
     }
   }
@@ -100,6 +101,7 @@ class AlbumsHandler {
         message: 'Maaf, terjadi kegagalan pada server kami',
       });
       response.code(500);
+      console.error(error);
       return response;
     }
   }
@@ -127,6 +129,7 @@ class AlbumsHandler {
         message: 'Maaf, terjadi kegagal pada server kami',
       });
       response.code(500);
+      console.error(error);
       return response;
     }
   }
