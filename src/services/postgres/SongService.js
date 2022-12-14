@@ -2,7 +2,7 @@ const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../../exeptions/InvariantError');
 const NotFoundError = require('../../exeptions/NotFoundError');
-const { mapDBSongModel } = require('../../utils');
+const { mapDBSongModel, mapSimpleSongModel } = require('../../utils');
 
 class SongService {
   constructor() {
@@ -15,9 +15,11 @@ class SongService {
     title, year, genre, performer, duration, albumId,
   }) {
     const id = nanoid(16);
+    const createdAt = new Date().toISOString();
+    const updatedAt = createdAt;
     const query = {
-      text: 'INSERT INTO songs VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-      values: [id, title, year, genre, performer, duration, albumId],
+      text: 'INSERT INTO songs VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
+      values: [id, title, year, performer, genre, duration, albumId, createdAt, updatedAt],
     };
     // eslint-disable-next-line no-underscore-dangle
     const result = await this._pool.query(query);
@@ -28,19 +30,10 @@ class SongService {
     return result.rows[0].id;
   }
 
-  async getSongs(title, performer) {
-    if (title !== undefined && performer !== undefined) {
-      const query = {
-        text: 'SELECT id, title, performer FROM songs WHERE LOWER(title) LIKE LOWER($1) AND LOWER(performer) LIKE LOWER($2)',
-        values: [`%${title}%`, `%${performer}%`],
-      };
-      // eslint-disable-next-line no-underscore-dangle
-      const songs = await this._pool.query(query);
-      return songs.rows;
-    }
+  async getSongs() {
     // eslint-disable-next-line no-underscore-dangle
-    const songs = await this._pool.query('SELECT id, title, performer FROM songs');
-    return songs.rows;
+    const result = await this._pool.query('SELECT id, title, performer FROM songs sg;');
+    return result.rows.map(mapSimpleSongModel);
   }
 
   async getSongById(id) {
@@ -59,12 +52,13 @@ class SongService {
     return result.rows.map(mapDBSongModel)[0];
   }
 
-  async putSongById(id, {
+  async editSongById(id, {
     title, year, genre, performer, duration, albumId,
   }) {
+    const updatedAt = new Date().toISOString();
     const query = {
-      text: 'UPDATE songs SET title=$1, year=$2, genre=$3, performer=$4, duration=$5, album_id=$6 WHERE id=$7 RETURNING id',
-      values: [title, year, genre, performer, duration, albumId, id],
+      text: 'UPDATE songs SET title=$1, year=$2, performer=$3, genre=$4, duration=$5, album_id=$6, updated_at=$7 WHERE id=$8 RETURNING id',
+      values: [title, year, performer, genre, duration, albumId, updatedAt, id],
     };
     // eslint-disable-next-line no-underscore-dangle
     const result = await this._pool.query(query);
