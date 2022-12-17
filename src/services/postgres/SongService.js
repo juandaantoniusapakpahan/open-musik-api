@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
-const InvariantError = require('../../exeptions/InvariantError');
-const NotFoundError = require('../../exeptions/NotFoundError');
+const InvariantError = require('../../exceptions/InvariantError');
+const NotFoundError = require('../../exceptions/NotFoundError');
 const { mapDBSongModel, mapSimpleSongModel } = require('../../utils');
 
 class SongService {
@@ -30,7 +30,17 @@ class SongService {
     return result.rows[0].id;
   }
 
-  async getSongs() {
+  async getSongs(title, performer) {
+    if (title !== undefined && performer !== undefined) {
+      const query = {
+        text: 'SELECT id, title, performer FROM songs WHERE lower(title) LIKE lower($1) AND lower(performer) LIKE lower($2)',
+        values: [`%${title}%`, `%${performer}%`],
+      };
+      // eslint-disable-next-line no-underscore-dangle
+      const result = await this._pool.query(query);
+      return result.rows.map(mapSimpleSongModel);
+    }
+
     // eslint-disable-next-line no-underscore-dangle
     const result = await this._pool.query('SELECT id, title, performer FROM songs sg;');
     return result.rows.map(mapSimpleSongModel);

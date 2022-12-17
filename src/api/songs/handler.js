@@ -23,9 +23,10 @@ class SongsHandler {
     return response;
   }
 
-  async getSongsHandler() {
+  async getSongsHandler(request) {
+    const { title = '', performer = '' } = request.query;
     // eslint-disable-next-line no-underscore-dangle
-    const songs = await this._service.getSongs();
+    const songs = await this._service.getSongs(title, performer);
     return {
       status: 'success',
       data: {

@@ -6,11 +6,25 @@ const AlbumsService = require('./services/postgres/AlbumService');
 const SongsService = require('./services/postgres/SongService');
 const AlbumsValidator = require('./validator/albums');
 const SongsValidator = require('./validator/songs');
-const ClientError = require('./exeptions/ClientError');
+const ClientError = require('./exceptions/ClientError');
+
+// ###User
+const users = require('./api/users');
+const UsersService = require('./services/postgres/UsersService');
+const UsersValidator = require('./validator/users');
+
+// ##Authentication
+const authentications = require('./api/authentications');
+const AuthenticationsService = require('./services/postgres/AuthenticationsService');
+const TokenManager = require('./tokenize/TokenManager');
+const AuthenticationsValidator = require('./validator/authentications');
 
 const init = async () => {
   const albumsService = new AlbumsService();
+  const usersService = new UsersService();
+  const authenticationsService = new AuthenticationsService();
   const songsService = new SongsService();
+
   const server = Hapi.Server({
     port: process.env.PORT,
     host: process.env.HOST,
@@ -21,20 +35,38 @@ const init = async () => {
     },
   });
 
-  await server.register([{
-    plugin: albums,
-    options: {
-      service: albumsService,
-      validator: AlbumsValidator,
+  await server.register([
+    {
+      plugin: albums,
+      options: {
+        service: albumsService,
+        validator: AlbumsValidator,
+      },
     },
-  },
-  {
-    plugin: songs,
-    options: {
-      service: songsService,
-      validator: SongsValidator,
+    {
+      plugin: users,
+      options: {
+        service: usersService,
+        validator: UsersValidator,
+      },
     },
-  }]);
+    {
+      plugin: songs,
+      options: {
+        service: songsService,
+        validator: SongsValidator,
+      },
+    },
+    {
+      plugin: authentications,
+      options: {
+        authenticationsService,
+        usersService,
+        tokenManager: TokenManager,
+        validator: AuthenticationsValidator,
+      },
+    },
+  ]);
 
   server.ext('onPreResponse', (request, h) => {
     const { response } = request;
