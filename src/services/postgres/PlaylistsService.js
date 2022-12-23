@@ -5,9 +5,11 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 class PlaylistsService {
-  constructor() {
+  constructor(collaborationService) {
     // eslint-disable-next-line no-underscore-dangle
     this._pool = new Pool();
+    // eslint-disable-next-line no-underscore-dangle
+    this._collaborationService = collaborationService;
   }
 
   async addPlaylists({ name, owner }) {
@@ -26,12 +28,15 @@ class PlaylistsService {
     return playlistId.rows[0].id;
   }
 
-  async getPlaylists(id) {
+  async getPlaylists(userId) {
     // eslint-disable-next-line no-return-await, no-underscore-dangle
 
     const query = {
-      text: 'SELECT pl.id, pl.name, us.username FROM playlists as pl LEFT JOIN users as us on pl.owner = us.id WHERE pl.owner = $1',
-      values: [id],
+      text: `SELECT py.id, py.name, us.username FROM playlists py
+      LEFT JOIN collaborations cb ON py.id = cb.playlist_id
+      LEFT JOIN users us ON py.owner = us.id
+      WHERE cb.user_id = $1 OR py.owner = $1`,
+      values: [userId],
     };
     // eslint-disable-next-line no-underscore-dangle
     const result = await this._pool.query(query);
@@ -60,13 +65,29 @@ class PlaylistsService {
     const result = await this._pool.query(query);
 
     if (!result.rows.length) {
-      throw new NotFoundError('Catatan tidak ditemukan');
+      throw new NotFoundError('Playlist tidak ditemukan');
     }
 
     const playlist = result.rows[0];
 
     if (playlist.owner !== owner) {
       throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+    }
+  }
+
+  async verifyPlaylistAccess(playlistId, userId) {
+    try {
+      await this.verifyPlaylistOwner(playlistId, userId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      try {
+        // eslint-disable-next-line no-underscore-dangle
+        await this._collaborationService.verifyCollaborator(playlistId, userId);
+      } catch {
+        throw error;
+      }
     }
   }
 }

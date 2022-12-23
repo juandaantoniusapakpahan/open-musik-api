@@ -8,10 +8,11 @@ module.exports = {
     playlistSongsService,
     songsService,
     playlistsService,
+    playlistActivitiesService,
     validator,
   }) => {
     // eslint-disable-next-line max-len
-    const plalyistSongsHandler = new PlalyistSongsHandler(playlistSongsService, songsService, playlistsService, validator);
+    const plalyistSongsHandler = new PlalyistSongsHandler(playlistSongsService, songsService, playlistsService, playlistActivitiesService, validator);
     server.route(routes(plalyistSongsHandler));
   },
 };

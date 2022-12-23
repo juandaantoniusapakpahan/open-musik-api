@@ -31,6 +31,7 @@ class PlaylistsHandler {
 
   async getPlaylistsHandler(request) {
     const { id: credentialId } = request.auth.credentials;
+
     // eslint-disable-next-line no-underscore-dangle
     const playlists = await this._playlistsService.getPlaylists(credentialId);
 
