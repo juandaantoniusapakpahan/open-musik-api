@@ -46,11 +46,9 @@ class PlaylistsHandler {
   async deletePlaylistHandler(request) {
     const { id: playlistId } = request.params;
     const { id: credentialId } = request.auth.credentials;
-    // eslint-disable-next-line no-underscore-dangle
     await this._playlistsService.verifyPlaylistOwner(playlistId, credentialId);
-    // eslint-disable-next-line no-underscore-dangle
     await this._playlistsService.deletePlaylists(playlistId);
-
+    
     return {
       status: 'success',
       message: 'Playlists berhasil dihapus',
