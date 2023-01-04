@@ -1,18 +1,22 @@
 class ExportsHandler {
-  constructor(service, validator) {
-    this._service = service;
+  constructor(ProducerService, playlistsService, validator) {
+    this._ProducerService = ProducerService;
+    this._playlistsService = playlistsService;
     this._validator = validator;
   }
 
   async postExportNotesHandler(request, h) {
     this._validator.validateExportSongsPayload(request.payload);
-
+    const { playlistId } = request.params;
+    const { id: credentialId } = request.auth.credentials;
+    // Memeriksa kepemilikan;
+    await this._playlistsService.verifyPlaylistOwner(playlistId, credentialId);
     const message = {
-        userId: request.auth.credentials.id,
-        targetEmail: request.payload.targetEmail,
+      playlistId: request.params.playlistId,
+      targetEmail: request.payload.targetEmail,
     };
 
-    await this._service.sendMessage('export:songs', JSON.stringify(message));
+    await this._ProducerService.sendMessage('export:songs', JSON.stringify(message));
 
     const response = h.response({
       status: 'success',
