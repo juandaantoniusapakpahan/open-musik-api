@@ -28,4 +28,15 @@ const mapSimpleSongModel = ({
   performer,
 });
 
-module.exports = { mapDBSongModel, mapSimpleSongModel };
+const mapAlbum = ({
+  id, 
+  name,
+  year,
+  cover,
+}) => ({
+  id,
+  name,
+  year,
+  coverUrl: cover,
+});
+module.exports = { mapDBSongModel, mapSimpleSongModel, mapAlbum };
