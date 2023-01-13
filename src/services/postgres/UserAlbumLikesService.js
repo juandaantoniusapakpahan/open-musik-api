@@ -1,10 +1,11 @@
 const { nanoid } = require('nanoid');
-const { Pool }  = require('pg');
+const { Pool } = require('pg');
 const NotFoundError = require('../../exceptions/NotFoundError');
 
 class UserAlbumLikeService {
-  constructor() {
+  constructor(cacheService) {
     this._pool = new Pool();
+    this._cacheService = cacheService;
   }
 
   async checkLikeAlbum(userId, albumId) {
@@ -12,14 +13,13 @@ class UserAlbumLikeService {
       text: 'SELECT id, user_id, album_id FROM user_album_likes WHERE user_id = $1 AND album_id = $2',
       values: [userId, albumId],
     };
-
     const result = await this._pool.query(query);
-   
+
     return result;
   }
 
   async likeAlbum(userId, albumId) {
-    
+
     const checkAlbumQuery = {
       text: 'SELECT * FROM albums WHERE id = $1',
       values: [albumId],
@@ -31,7 +31,7 @@ class UserAlbumLikeService {
       throw new NotFoundError('Album tidak ditemukan');
     }
 
-    
+
     const resultCheck = await this.checkLikeAlbum(userId, albumId);
 
     if (!resultCheck.rows.length) {
@@ -44,6 +44,7 @@ class UserAlbumLikeService {
       return;
     }
     await this.disLikeAlbum(userId, albumId);
+    await this._cacheService.delete(`likes:${albumId}`);
     return;
   }
 
@@ -77,8 +78,12 @@ class UserAlbumLikeService {
     if (!result.rows.length) {
       throw new NotFoundError('Album tidak ditemukan');
     }
+
+    await this._cacheService.set(`likes:${albumId}`, JSON.stringify(result.rows.length));
+
     return result.rows.length;
   }
 }
+
 
 module.exports = UserAlbumLikeService;
