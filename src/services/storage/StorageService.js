@@ -1,5 +1,4 @@
 const fs = require('fs');
-const InvariantError = require('../../exceptions/InvariantError')
 
 class StorageService {
   constructor(folder) {

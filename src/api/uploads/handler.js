@@ -14,7 +14,7 @@ class UploadsHandler {
 
     const filename = await this._storageService.writeFile(cover, cover.hapi);
 
-    cUrl = `http://${process.env.HOST}:${process.env.PORT}/upload/images/${filename}`;
+    const cUrl = `http://${process.env.HOST}:${process.env.PORT}/upload/images/${filename}`;
 
     await this._albumsService.allCovers(albumId, cUrl);
 

@@ -58,30 +58,34 @@ class UserAlbumLikeService {
   }
 
   async getAlbumLikes(albumId) {
-    const checkAlbum = {
-      text: 'SELECT id, name FROM albums WHERE id = $1',
-      values: [albumId],
-    };
-
-    const resultCheckAlbum = await this._pool.query(checkAlbum);
-
-    if (!resultCheckAlbum.rows.length) {
-      throw new NotFoundError('Album tidak ditemukan');
+    try {
+      const result = await this._cacheService.get(`likes-${albumId}`);
+      return result;
+    } catch (error) {
+      const checkAlbum = {
+        text: 'SELECT id, name FROM albums WHERE id = $1',
+        values: [albumId],
+      };
+      const resultCheckAlbum = await this._pool.query(checkAlbum);
+  
+      if (!resultCheckAlbum.rows.length) {
+        throw new NotFoundError('Album tidak ditemukan');
+      }
+  
+      const query = {
+        text: 'SELECT * FROM user_album_likes WHERE album_id = $1',
+        values: [albumId],
+      };
+      const result = await this._pool.query(query);
+  
+      if (!result.rows.length) {
+        throw new NotFoundError('Album tidak ditemukan');
+      }
+  
+      await this._cacheService.set(`likes:${albumId}`, JSON.stringify(result.rows.length));
+  
+      return result.rows.length;
     }
-
-    const query = {
-      text: 'SELECT * FROM user_album_likes WHERE album_id = $1',
-      values: [albumId],
-    };
-    const result = await this._pool.query(query);
-
-    if (!result.rows.length) {
-      throw new NotFoundError('Album tidak ditemukan');
-    }
-
-    await this._cacheService.set(`likes:${albumId}`, JSON.stringify(result.rows.length));
-
-    return result.rows.length;
   }
 }
 
